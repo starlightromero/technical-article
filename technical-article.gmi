@@ -49,7 +49,7 @@ As for the non-leaf nodes, the primary key is used as the key for indexing the d
 You've learned well. We know now how databases work and to get a record by it's primary key, but what if we don't have an id? Let's take a look at the query below.
 
 ```
-SELECT * FROM User WHERE username = 'testuser'
+SELECT * FROM User WHERE username = 'testuser';
 ```
 
 To understand the innerworkings of this query we'll need to use all of the sacred tree knowledge we've learned up to this point combined with one more tool: pages. Pages solve an important problem of how to physically store the data. Taking one step back before diving in, we need to understand that every SQL database has two operating system files: a data file and a log file. For the purposes of this journey, we care about the data file. The data file can be broken up into two categories: primary data and secondary data. Primary data contains the startup information along with all of the actual database data. Secondary data is not required. It uses indexing to allow data to be stored and retrieved across many files or even different disks. But back to the data file as a whole. The data file is divided into pages. Pages, like atoms, are fundamental building blocks of the database. They are fixed in size, have unique number identifiers which can be referenced, and contain important metadata. Each node in the B-Trees and B+Trees are stored inside pages.
