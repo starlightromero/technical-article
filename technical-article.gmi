@@ -1,0 +1,74 @@
+# The Data Structures Underneath Relational Databases
+
+> "We are so much the victims of abstraction that with the Earth in flames we can barely rouse ourselves to wander across the room and look at the thermostat."
+> -Terrance McKenna
+
+## Relational Database Magick
+
+Python is built on top of CPython which is built on top of C. Everything in JavaScript is an object which is a hash table. These are common abstractions which we know about, accept, and perhaps even understand. What about the abstractions in relational databases? Relational databases like MySQL, PostgreSQL, and SQLite are models of data that developers rely on everyday. Yet how many of those same developers can explain the innerworkings of their tools? Fear not! This guide is here to take your knowledge of relational databases to the level of a Chad.
+
+## It Begins with a Tree
+
+The first path on our journey leads us to a mysterious tree known as an m-ary tree. Although this tree seems to be clouded in darkness, it is not much different than the binary tree which is commonly taught in computer science. A m-ary tree is a rooted tree in which each node has no more than m chilren. Let us break this down. A rooted tree simply means it is a tree with a root, as opposed to an unrooted free tree which looks more like a graph without cycles. This is your common tree. Each node has no more than m children. Both binary trees and ternary trees are types of m-ary tree. Binary trees are m-ary trees where m=2. Ternary trees are m-ary trees where m=3. The only difference in a m-ary tree is that each node can have up to m children. You can simply think of a m-ary tree as a binary tree with lots of children. That is it. The mystery is dispelled.
+
+=> /articles/the-data-structures-underneath-relational-databases/m-ary.jpg M-ary Tree
+
+## The Tree of Bees
+
+We climb the many nodes of the m-ary tree and look out onto the horizon. We see a tree that looks similar to the m-ary that we have come to know, yet it is not the same. It is a tree known as a B-Tree ("Bee Tree"). A B-Tree is a m-ary tree data stucture that is self-balancing and stores keys in its nodes in a sorted, ascending order. Each key has two references to two child nodes. The left side child node keys are less than the current key. The right side child node keys are greater than then current key. A single node can have n number of keys. The maximum number of child nodes is n-1\. The strange rules that the B-Tree adheres to allows it to have a search, insert, and delete time complexity of O(log n). Congrats! If you got this far then you understand the basic structures databases use. From here on we will simply expand on these concepts.
+
+=> /articles/the-data-structures-underneath-relational-databases/b-tree.jpg B-Tree
+
+```
+| Type           | Insert   | Delete   | Search   |
+| -------------- | -------- | -------- | -------- |
+| Unsorted Array | O(1)     | O(n)     | O(n)     |
+| Sorted Array   | O(n)     | O(n)     | O(log n) |
+| B-Tree         | O(log n) | O(log n) | O(log n) |
+| B+Tree*        | O(log n) | O(log n) | O(log n) |
+```
+
+Note: the B+Tree has a worst case time complexity of O(M*log n + log L) for insert and delete, and a worst case of O(log n + log L) for search.
+
+## The Knowledge is in the Leaves
+
+There is a tree that looks exactly the same as a B-Tree with one minor difference. It only stores data on its leaf nodes. This special tree is known as a B+Tree ("Bee Plus Tree"). In a B+Tree, all non-leaf nodes are duplicated as leaf nodes. Another important attribute that the B+Tree possesses is the pointer. You can travel through all the values in the leaf nodes since each leaf node has a pointer to the next leaf node. This tree is the tree we think of when we think of databases. How can we store the key-value pairs that we know a record to have? For a given record, the data in the row is converted into a byte stream. Now we have two parts, the primary key, and the byte stream. These two parts together are known as a payload. The payload is that data that is stored in the leaves of the B+Tree.
+
+```
+SELECT * FROM User WHERE id = 0;
+```
+
+As for the non-leaf nodes, the primary key is used as the key for indexing the data. In this way, we can perform a binary search on the tree by starting at the root or a linear seach by traveling through the leaves. In the code snippet seen above we would search the B+Tree using the id ("primary key") to find the record associated with the id.
+
+=> /articles/the-data-structures-underneath-relational-databases/b+tree-database.jpg B+Tree in a database
+
+=> /articles/the-data-structures-underneath-relational-databases/b-tree-database.jpg B-Tree in a database
+
+## The Last Tool
+
+You've learned well. We know now how databases work and to get a record by it's primary key, but what if we don't have an id? Let's take a look at the query below.
+
+```
+SELECT * FROM User WHERE username = 'testuser'
+```
+
+To understand the innerworkings of this query we'll need to use all of the sacred tree knowledge we've learned up to this point combined with one more tool: pages. Pages solve an important problem of how to physically store the data. Taking one step back before diving in, we need to understand that every SQL database has two operating system files: a data file and a log file. For the purposes of this journey, we care about the data file. The data file can be broken up into two categories: primary data and secondary data. Primary data contains the startup information along with all of the actual database data. Secondary data is not required. It uses indexing to allow data to be stored and retrieved across many files or even different disks. But back to the data file as a whole. The data file is divided into pages. Pages, like atoms, are fundamental building blocks of the database. They are fixed in size, have unique number identifiers which can be referenced, and contain important metadata. Each node in the B-Trees and B+Trees are stored inside pages.
+
+## The Rise of the Tree Master
+
+B-Trees are used to store indices. B+Trees are used to store tables. Within us now is the knowldge to rise to the level of the Tree Master. When we do a SELECT query like the one above we see that we need 'username' to equal 'testuser'. The database will locate the appropriate B-Tree that is associated with usernames. It will search the tree to find the username that matches 'testuser' and with the 'testuser' it will find the index ("primary key") of 0. Once the primary key is known, the database will search the B+Tree and find the node with that same primary key. It will return the primary key along with the byte stream. It will convert the byte stream back into human readable words and the query has been complete.
+
+## May the Trees be with You
+
+Now, I grant you the title of Tree Master. This journey has come to an end however I hope that with this new knowledge you can understand the world in a more complete way. We started with M-ary trees, rose to the B-Trees, conquered the B+Trees, and brought all of it together to understand how a relational databases work. May the trees be with you.
+
+### Sources
+
+=> https://medium.com/@shashankbaravani/database-storage-engines-under-the-hood-705418dc0e35 Database storage engines under the hood
+=> https://hub.packtpub.com/how-sql-server-handles-data-under-the-hood/ How SQL Server handles data under the hood
+=> https://en.wikipedia.org/wiki/B%2B_tree B+ tree
+=> https://towardsdatascience.com/how-b-tree-indexes-are-built-in-a-database-6f847fb3cfcc?gi=fc3b3159bbf4 How B+Tree Indexes Are Built In A Database?
+=> https://cstack.github.io/db_tutorial/ Let's Build a Simple Database
+=> https://dzone.com/articles/database-btree-indexing-in-sqlite How Database B-Tree Indexing Works
+=> https://medium.com/basecs/busying-oneself-with-b-trees-78bbf10522e7 Busying Oneself With B-Trees
+=> https://www.mssqltips.com/sqlservertip/4345/understanding-how-sql-server-stores-data-in-data-files/ Understanding how SQL Server stores data in data files
